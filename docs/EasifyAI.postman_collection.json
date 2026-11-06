@@ -1,0 +1,266 @@
+{
+  "info": {
+    "name": "EasifyAI — entrega final",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Roteiro sequencial: cria um registro fictício e o exclui ao final. Requer Gemini e Oracle configurados."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "analiseId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Criar análise",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/analises",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transcricao\": \"Vendedor Bruno Costa: Ana, quais dificuldades a ACME enfrenta? Cliente Ana Silva: Nosso atendimento é manual e precisamos de um CRM. Temos interesse alto em contratar, sem intenção de cancelar. Vendedor: Vou enviar uma proposta.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) { pm.collectionVariables.set(\"analiseId\", pm.response.json().id); } else { pm.collectionVariables.set(\"analiseId\", \"\"); pm.execution.setNextRequest(null); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Listar",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/analises"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Detalhes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/analises/{{analiseId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Transcrição original",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/analises/{{analiseId}}/transcricao"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Corrigir análise",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/analises/{{analiseId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Ana Silva\",\n  \"empresaCliente\": \"ACME\",\n  \"vendedor\": \"Bruno Costa\",\n  \"dores\": [\n    \"Processos manuais\"\n  ],\n  \"produtoRecomendado\": \"CRM\",\n  \"nivelInteresse\": \"ALTO\",\n  \"riscoChurn\": \"BAIXO\",\n  \"concorrentes\": [],\n  \"proximaAcao\": \"Enviar proposta\",\n  \"resumo\": \"Cliente interessado em automatizar o atendimento.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Registrar acompanhamento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/analises/{{analiseId}}/acompanhamentos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"EM_ANDAMENTO\",\n  \"observacao\": \"Proposta em preparação\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Histórico",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/analises/{{analiseId}}/acompanhamentos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Validar erro 400",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/analises/{{analiseId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Excluir registro criado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/analises/{{analiseId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Confirmar exclusão",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/analises/{{analiseId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
